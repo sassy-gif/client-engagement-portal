@@ -1,19 +1,30 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-paper flex items-center justify-center">
-      <div className="bg-white border border-hairline rounded-sm p-8">
-        <p className="font-mono text-xs uppercase tracking-wider text-brass mb-2">
-          Design Test
-        </p>
-        <h1 className="font-display text-3xl text-ink mb-2">
-          Origami Consulting
-        </h1>
-        <p className="font-body text-sm text-sage">
-          If this looks styled, the theme is working.
-        </p>
-      </div>
-    </div>
-  );
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import ClientDashboard from './pages/ClientDashboard';
+
+function ProtectedRoute({ children }) {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/login" replace />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+            <ProtectedRoute>
+              <ClientDashboard />
+            </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
