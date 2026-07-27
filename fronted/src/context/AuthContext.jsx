@@ -9,16 +9,18 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
 
-  async function login(email, password) {
+ async function login(email, password) {
     const { data } = await apiClient.post('/auth/login', { email, password });
-    localStorage.setItem('origami_token', data.token);
+    localStorage.setItem('origami_access_token', data.accessToken);
+    localStorage.setItem('origami_refresh_token', data.refreshToken);
     localStorage.setItem('origami_user', JSON.stringify(data.user));
     setUser(data.user);
     return data.user;
   }
 
-  function logout() {
-    localStorage.removeItem('origami_token');
+function logout() {
+    localStorage.removeItem('origami_access_token');
+    localStorage.removeItem('origami_refresh_token');
     localStorage.removeItem('origami_user');
     setUser(null);
   }

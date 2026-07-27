@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const pool = require('../config/db');
 
 // POST /api/auth/login
@@ -39,19 +40,25 @@ async function login(req, res) {
       clientId = clientRows[0]?.id || null;
     }
 
-    const tokenPayload = {
+  const tokenPayload = {
       id: user.id,
       role: user.role,
       fullName: user.full_name,
       clientId
     };
 
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '8h'
+    // Short-lived access token — used for normal API calls
+    const accessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: '15m'
     });
 
+    // Long-lived refresh token — random string, stored in DB, used only to get new access tokens
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    await pool.query('UPDATE users SET refresh_token = ? WHERE id = ?', [refreshToken, user.id]);
+
     res.json({
-      token,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         fullName: user.full_name,
@@ -59,7 +66,7 @@ async function login(req, res) {
         role: user.role,
         clientId
       }
-    });
+    });  
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error during login' });
@@ -83,4 +90,44 @@ async function getCurrentUser(req, res) {
   }
 }
 
-module.exports = { login, getCurrentUser };
+// POST /api/auth/refresh
+// Takes a refresh token, verifies it matches what's stored for that user,
+// and issues a fresh access token — no password needed.
+async function refresh(req, res) {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token required' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM users WHERE refresh_token = ? AND is_active = TRUE',
+      [refreshToken]
+    );
+
+    if (rows.length === 0) {
+      return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+
+    const user = rows[0];
+
+    let clientId = null;
+    if (user.role === 'client') {
+      const [clientRows] = await pool.query('SELECT id FROM clients WHERE user_id = ?', [user.id]);
+      clientId = clientRows[0]?.id || null;
+    }
+
+    const newAccessToken = jwt.sign(
+      { id: user.id, role: user.role, fullName: user.full_name, clientId },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    console.error('Refresh error:', err);
+    res.status(500).json({ message: 'Server error refreshing token' });
+  }
+}
+module.exports = { login, getCurrentUser, refresh };

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import ClientDashboard from './pages/ClientDashboard';
 import AdminHome from './pages/AdminHome';
+import ProjectDetail from './pages/ProjectDetail';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -29,6 +30,14 @@ export default function App() {
        </ProtectedRoute>
      }
       />
+      <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

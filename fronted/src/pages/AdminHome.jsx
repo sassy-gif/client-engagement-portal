@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 export default function AdminHome() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
   const [clients, setClients] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,14 +75,18 @@ export default function AdminHome() {
             Projects ({projects.length})
           </h2>
           <div className="bg-white border border-hairline rounded-sm divide-y divide-hairline">
-            {projects.map((p) => (
-              <div key={p.id} className="px-4 py-3">
-                <p className="font-body text-sm text-ink">{p.name}</p>
-                <p className="font-mono text-xs text-ink/40">
-                  {p.client_name} · {p.status}
-                </p>
-              </div>
-            ))}
+        {projects.map((p) => (
+  <div
+    key={p.id}
+    onClick={() => navigate(`/projects/${p.id}`)}
+    className="px-4 py-3 cursor-pointer hover:bg-paper transition-colors"
+  >
+    <p className="font-body text-sm text-ink">{p.name}</p>
+    <p className="font-mono text-xs text-ink/40">
+      {p.client_name} · {p.status}
+    </p>
+  </div>
+))}
           </div>
         </section>
       </main>
