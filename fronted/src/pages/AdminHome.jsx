@@ -11,6 +11,7 @@ export default function AdminHome() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
 
   function handleLogout() {
     logout();
@@ -18,10 +19,11 @@ export default function AdminHome() {
   }
 
   useEffect(() => {
-    Promise.all([apiClient.get('/clients'), apiClient.get('/projects')])
-      .then(([clientsRes, projectsRes]) => {
+   Promise.all([apiClient.get('/clients'), apiClient.get('/projects'), apiClient.get('/analytics/overview')])
+      .then(([clientsRes, projectsRes, analyticsRes]) => {
         setClients(clientsRes.data);
         setProjects(projectsRes.data);
+        setAnalytics(analyticsRes.data);
       })
       .catch((err) => setError(err.response?.data?.message || 'Failed to load admin data'))
       .finally(() => setLoading(false));
@@ -55,7 +57,66 @@ export default function AdminHome() {
         </div>
       </header>
 
-      <main className="px-8 py-8 max-w-5xl grid grid-cols-2 gap-8">
+<main className="px-8 py-8 max-w-5xl">
+        {analytics && (
+          <section className="mb-8">
+            <h2 className="font-display text-lg text-ink/70 mb-4">Overview</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white border border-hairline rounded-sm p-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-ink/40">Clients</p>
+                <p className="font-display text-3xl text-ink mt-1">{analytics.totals.totalClients}</p>
+              </div>
+              <div className="bg-white border border-hairline rounded-sm p-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-ink/40">Projects</p>
+                <p className="font-display text-3xl text-ink mt-1">{analytics.totals.totalProjects}</p>
+              </div>
+              <div className="bg-white border border-hairline rounded-sm p-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-ink/40">Tasks</p>
+                <p className="font-display text-3xl text-ink mt-1">{analytics.totals.totalTasks}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-white border border-hairline rounded-sm p-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-ink/40 mb-3">Projects by Status</p>
+                {analytics.projectsByStatus.map((row) => (
+                  <div key={row.status} className="mb-2">
+                    <div className="flex justify-between text-xs font-body text-ink/60 mb-0.5">
+                      <span>{row.status.replace('_', ' ')}</span>
+                      <span>{row.count}</span>
+                    </div>
+                    <div className="h-2 bg-paper rounded-sm overflow-hidden">
+                      <div
+                        className="h-full bg-brass"
+                        style={{ width: `${(row.count / analytics.totals.totalProjects) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white border border-hairline rounded-sm p-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-ink/40 mb-3">Tasks by Status</p>
+                {analytics.tasksByStatus.map((row) => (
+                  <div key={row.status} className="mb-2">
+                    <div className="flex justify-between text-xs font-body text-ink/60 mb-0.5">
+                      <span>{row.status.replace('_', ' ')}</span>
+                      <span>{row.count}</span>
+                    </div>
+                    <div className="h-2 bg-paper rounded-sm overflow-hidden">
+                      <div
+                        className="h-full bg-sage"
+                        style={{ width: `${(row.count / analytics.totals.totalTasks) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+       <div className="grid grid-cols-2 gap-8">
         <section>
           <h2 className="font-display text-lg text-ink/70 mb-4">
             Clients ({clients.length})
@@ -89,6 +150,7 @@ export default function AdminHome() {
 ))}
           </div>
         </section>
+     </div>
       </main>
     </div>
   );

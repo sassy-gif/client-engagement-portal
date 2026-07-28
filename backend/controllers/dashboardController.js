@@ -47,7 +47,7 @@ async function getClientDashboard(req, res) {
           milestones = milestoneRows;
         }
 
-        const [recentActivity] = await pool.query(
+       const [recentActivity] = await pool.query(
           `SELECT id, type, title, description, created_at
            FROM activities
            WHERE project_id = ? AND visibility = 'client_visible'
@@ -56,7 +56,15 @@ async function getClientDashboard(req, res) {
           [project.id]
         );
 
-        return { ...project, milestones, recentActivity };
+        const [documents] = await pool.query(
+          `SELECT id, file_name, file_size, created_at
+           FROM documents
+           WHERE project_id = ? AND visibility = 'client_visible'
+           ORDER BY created_at DESC`,
+          [project.id]
+        );
+
+        return { ...project, milestones, recentActivity, documents };
       })
     );
 

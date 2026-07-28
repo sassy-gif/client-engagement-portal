@@ -9,6 +9,8 @@ const activityRoutes = require('./routes/activityRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use('/api', activityRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api', taskRoutes);
 app.use('/api', analyticsRoutes);
+app.use('/api', documentRoutes);
+app.use('/api', meetingRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Origami CES API running' });

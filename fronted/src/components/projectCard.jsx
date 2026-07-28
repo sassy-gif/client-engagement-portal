@@ -51,13 +51,36 @@ export default function ProjectCard({ project }) {
           <MilestoneStepper milestones={project.milestones} />
         </div>
       )}
-
-      <div>
+<div className="mb-5">
         <p className="font-mono text-xs uppercase tracking-wider text-ink/40 mb-1">
           Recent Activity
         </p>
         <ActivityFeed activities={project.recentActivity} />
       </div>
+
+      <div>
+        <p className="font-mono text-xs uppercase tracking-wider text-ink/40 mb-1">
+          Documents
+        </p>
+        {project.documents && project.documents.length > 0 ? (
+          <ul className="divide-y divide-hairline">
+            {project.documents.map((d) => (
+              <li key={d.id} className="py-2 flex items-center justify-between">
+                <span className="font-body text-sm text-ink">{d.file_name}</span>
+                <a
+                  href={`http://localhost:5000/api/documents/${d.id}/download`}
+                  className="font-mono text-xs uppercase tracking-wider text-brass hover:underline"
+                >
+                  Download
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-ink/50 font-body py-2">No documents shared yet.</p>
+        )}
+      </div>
     </div>
   );
 }
+    
